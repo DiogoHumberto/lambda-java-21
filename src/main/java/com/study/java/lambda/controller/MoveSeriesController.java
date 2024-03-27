@@ -1,5 +1,6 @@
 package com.study.java.lambda.controller;
 
+import com.study.java.lambda.dto.DadosSerie;
 import com.study.java.lambda.service.MoveSeriesService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,9 +19,9 @@ public class MoveSeriesController {
     private final MoveSeriesService service;
 
     @GetMapping("/findAll")
-    public ResponseEntity findAllAboutOneSerie (@RequestParam String nameSerie){
+    public ResponseEntity<DadosSerie> findAllAboutOneSerie (@RequestParam String nameSerie){
 
-        return service.findAllSerie(nameSerie);
+        return ResponseEntity.ok(service.findAllSerie(nameSerie));
     }
 
 }
