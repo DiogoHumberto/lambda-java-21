@@ -19,7 +19,7 @@ public class MoveSeriesController {
     private final MoveSeriesService service;
 
     @GetMapping("/findAll")
-    public ResponseEntity<DadosSerie> findAllAboutOneSerie (@RequestParam String nameSerie){
+    public ResponseEntity<?> findAllAboutOneSerie (@RequestParam String nameSerie){
 
         return ResponseEntity.ok(service.findAllSerie(nameSerie));
     }

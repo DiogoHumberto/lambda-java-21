@@ -25,13 +25,16 @@ public class Episodio {
         this.numeroEpisodio = dadosEpisodio.numero();
 
         try {
-            this.avaliacao = Double.valueOf(dadosEpisodio.avaliacao());
+            this.avaliacao = dadosEpisodio.avaliacao() != null ? Double.valueOf(dadosEpisodio.avaliacao()) : 0.0;
+        } catch (NumberFormatException ex) {
+            this.avaliacao =  0.0;
+        }
+
+        try {
             this.dataLancamento = LocalDate.parse(dadosEpisodio.dtLancamento());
+        }catch (DateTimeParseException ex){
+            this.dataLancamento = null;
 
-        } catch (NumberFormatException | DateTimeParseException ex) {
-
-            this.avaliacao =  ex.getCause() instanceof NumberFormatException ? 0.0 :  this.avaliacao;
-            this.dataLancamento =  ex.getCause() instanceof DateTimeParseException ? null : this.dataLancamento;
         }
     }
 
