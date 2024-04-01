@@ -10,6 +10,7 @@ import com.study.java.lambda.utils.ClientHttp;
 import com.study.java.lambda.utils.LocalObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -43,15 +45,13 @@ public class MoveSeriesService {
 
         DadosSerie respSerie = respEntitySerie.getBody();
 
-        List<DadosTemporada> temporadas = new ArrayList<>();
-
-
         List<Callable<Object>> callableList = new ArrayList<>();
 
         IntStream.rangeClosed(1, respSerie.totalTemporadas()).forEach(i ->
                 callableList.add(() -> featureCall(URL_BASE + name.replace(" ", "+") + "&season=" + i + API_KEY))
         );
 
+        List<DadosTemporada> temporadas = new ArrayList<>();
 
         var respTemps = callAndReturn(callableList);
 
@@ -65,25 +65,35 @@ public class MoveSeriesService {
                    log.error("parse  {} msg {}" , DadosTemporada.class, e.getMessage());
                 }
             }
-
         });
-
-//        List<DadosEpisodio> dadosEpisodios = temporadas.stream()
-//                .flatMap(t -> t.episodios().stream())
-//                .collect(Collectors.toList());
-
 
         List<Episodio> episodios = temporadas.stream()
                 .flatMap(t -> t.episodios().stream()
                         .map(d -> new Episodio(t.numero(), d)))
                 .collect(Collectors.toList());
 
-//        for (int i = 1; i<= respSerie.totalTemporadas(); i++){
-//            ResponseEntity<DadosTemporada> respEntityTemporada = clientHttp.realizarChamadaHttp(null, null, HttpMethod.GET, URL_BASE + name.replace(" ", "+") +"&season=" + i + API_KEY, DadosTemporada.class );
-//            temporadas.add(respEntityTemporada.getBody());
-//        }
-
         return episodios;
+    }
+
+    public List<?> findFilterSerie(String name, String episodio, Double avaliacao){
+
+        List<Episodio> respEpisodio = (List<Episodio>) findAllSerie(name);
+
+        if(!respEpisodio.isEmpty()){
+
+            if (StringUtils.isNotBlank(episodio)) {
+                respEpisodio = respEpisodio.stream().filter(e -> e.getTitulo().startsWith(episodio)).collect(Collectors.toList());
+            }
+
+            if (avaliacao != null) {
+                respEpisodio = respEpisodio.stream().filter(e -> e.getAvaliacao() >= avaliacao)
+                        .peek(e -> log.info("Filter avalicao : result {} ", e.getTitulo()))
+                        .sorted(Comparator.comparing(Episodio::getAvaliacao).reversed()).collect(Collectors.toList());
+            }
+        }
+
+        return respEpisodio;
+
     }
 
     @Async
